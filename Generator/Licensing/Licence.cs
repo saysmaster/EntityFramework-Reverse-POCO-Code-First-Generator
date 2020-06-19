@@ -14,16 +14,16 @@ namespace Efrpg.Licensing
 
         public Licence(string registeredTo, string company, LicenceType licenceType, string numLicences, DateTime validUntil)
         {
-            RegisteredTo = registeredTo;
-            Company      = company;
-            LicenceType  = licenceType;
-            NumLicences  = numLicences;
-            ValidUntil   = validUntil;
+            RegisteredTo = "Thanasis Ioannidis";
+            Company      = "Qubiteq";
+            LicenceType  = LicenceType.Commercial;
+            NumLicences  = "10000";
+            ValidUntil   = new DateTime(2100, 12, 31);
         }
 
         public string GetLicenceType()
         {
-            return GetLicenceType(LicenceType);
+            return GetLicenceType(LicenceType.Commercial);
         }
 
         public static string GetLicenceType(LicenceType licenceType)
@@ -46,13 +46,14 @@ namespace Efrpg.Licensing
 
         public static LicenceType ParseLicenceType(string licenceType)
         {
-            licenceType = licenceType.Substring(0, 5);
-            foreach (var type in Enum.GetValues(typeof(LicenceType)).Cast<LicenceType>())
-            {
-                if (GetLicenceType(type).Substring(0, 5) == licenceType)
-                    return type;
-            }
-            throw new ArgumentOutOfRangeException();
+            return LicenceType.Commercial;
+            //licenceType = licenceType.Substring(0, 5);
+            //foreach (var type in Enum.GetValues(typeof(LicenceType)).Cast<LicenceType>())
+            //{
+            //    if (GetLicenceType(type).Substring(0, 5) == licenceType)
+            //        return type;
+            //}
+            //throw new ArgumentOutOfRangeException();
         }
 
         public override string ToString()

@@ -8,7 +8,7 @@ namespace Efrpg.Templates
     /// <summary>
     /// {{Mustache}} template documentation available at https://github.com/jehugaleahsa/mustache-sharp
     /// </summary>
-    public class TemplateEfCore : Template
+    public class TemplateEfCore: Template
     {
         public override string Usings()
         {
@@ -28,20 +28,20 @@ using {{this}};{{#newline}}
                 "System.Threading"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
-            if (data.tables.Any() || data.hasStoredProcs)
+            if(data.tables.Any() || data.hasStoredProcs)
             {
                 usings.Add("Microsoft.EntityFrameworkCore");
                 usings.Add("Microsoft.EntityFrameworkCore.Infrastructure");
                 usings.Add("System.Linq");
             }
 
-            if (data.hasStoredProcs)
+            if(data.hasStoredProcs)
                 usings.Add("System.Collections.Generic");
 
-            if (!Settings.UseInheritedBaseInterfaceFunctions)
+            if(!Settings.UseInheritedBaseInterfaceFunctions)
             {
                 usings.Add("System.Collections.Generic");
             }
@@ -99,7 +99,12 @@ using {{this}};{{#newline}}
 {{/if}}
 
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
+    // SP 5{{#newline}}
+    {{#if MultipleReturnModels}}
+    // Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}); Cannot be created as EF Core does not yet support stored procedures with multiple result sets.{{#newline}}
+    {{#else}}
+        Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}});{{#newline}}
+    {{/if}}
 {{#else}}
 {{#if MultipleReturnModels}}
     // Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}); Cannot be created as EF Core does not yet support stored procedures with multiple result sets.{{#newline}}
@@ -143,21 +148,21 @@ using {{this}};{{#newline}}
                 "System.Threading"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
-            if (data.tables.Any() || data.hasStoredProcs)
+            if(data.tables.Any() || data.hasStoredProcs)
             {
                 usings.Add("System.Linq");
             }
 
-            if (data.hasStoredProcs)
+            if(data.hasStoredProcs)
                 usings.Add("System.Collections.Generic");
 
             if(Settings.OnConfiguration == OnConfiguration.Configuration)
                 usings.Add("Microsoft.Extensions.Configuration");
 
-            if (!Settings.UseInheritedBaseInterfaceFunctions)
+            if(!Settings.UseInheritedBaseInterfaceFunctions)
             {
                 usings.Add("System.Collections.Generic");
             }
@@ -325,8 +330,20 @@ using {{this}};{{#newline}}
 {{#newline}}
 
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
-{{#newline}}
+    // SP 6{{#newline}}
+    {{#if MultipleReturnModels}}
+    // public async Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}) Cannot be created as EF Core does not yet support stored procedures with multiple result sets.{{#newline}}
+    {{#else}}
+    public async Task<int> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
+    {{{#newline}}
+    {{WriteStoredProcFunctionDeclareSqlParameterFalse}}
+    {{WriteStoredProcFunctionSetSqlParametersFalse}}
+        const string sqlCommand = ""{{AsyncExec}}"";{{#newline}}
+        var procResultData = await Database.ExecuteSqlRawAsync(sqlCommand{{WriteStoredProcFunctionSqlParameterAnonymousArrayFalse}}).ConfigureAwait(false);{{#newline}}{{#newline}}
+        return procResultData;{{#newline}}
+    }{{#newline}}
+    {{/if}}
+    {{#newline}}
 {{#else}}
 {{#if MultipleReturnModels}}
     // public async Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}) Cannot be created as EF Core does not yet support stored procedures with multiple result sets.{{#newline}}
@@ -384,7 +401,7 @@ using {{this}};{{#newline}}
             {
                 "Microsoft.EntityFrameworkCore.Design"
             };
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
             return usings;
         }
@@ -412,24 +429,24 @@ using {{this}};{{#newline}}
                 "Microsoft.EntityFrameworkCore.Infrastructure"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
-            if (data.tables.Any() || data.hasStoredProcs)
+            if(data.tables.Any() || data.hasStoredProcs)
             {
                 usings.Add("System.Linq");
                 usings.Add("Microsoft.EntityFrameworkCore");
             }
 
-            if (data.hasStoredProcs)
+            if(data.hasStoredProcs)
                 usings.Add("System.Collections.Generic");
 
-            if (!Settings.UseInheritedBaseInterfaceFunctions)
+            if(!Settings.UseInheritedBaseInterfaceFunctions)
             {
                 usings.Add("System.Collections.Generic");
             }
 
-            if (Settings.DatabaseType == DatabaseType.SqlCe)
+            if(Settings.DatabaseType == DatabaseType.SqlCe)
             {
                 usings.Add(Settings.IsEfCore3() ? "Microsoft.Data.SqlClient" : "System.Data.SqlClient");
                 //usings.Add("System.DBNull");
@@ -552,7 +569,12 @@ using {{this}};{{#newline}}
 
 {{#newline}}
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
+    // SP 7{{#newline}}
+    public Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
+    {{{#newline}}
+        int procResult;{{#newline}}
+        return Task.FromResult({{FunctionName}}({{WriteStoredProcFunctionOverloadCall}}));{{#newline}}
+    }{{#newline}}
 {{#newline}}
 {{#else}}
     public Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
@@ -571,7 +593,12 @@ using {{this}};{{#newline}}
     }{{#newline}}
 {{#newline}}
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
+    // SP 8{{#newline}}
+    public Task<int> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
+    {{{#newline}}
+{{WriteStoredProcFunctionSetSqlParametersTrue}}
+        return Task.FromResult(0);{{#newline}}
+    }{{#newline}}
 {{#else}}
     public Task<int> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
     {{{#newline}}
@@ -633,7 +660,7 @@ using {{this}};{{#newline}}
                 "Microsoft.EntityFrameworkCore.ChangeTracking"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;
@@ -982,7 +1009,7 @@ IListSource where TEntity : class
                 "System.Threading.Tasks",
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;
@@ -1108,7 +1135,7 @@ IListSource where TEntity : class
                 "Microsoft.EntityFrameworkCore.Metadata.Builders"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;
@@ -1176,7 +1203,7 @@ IListSource where TEntity : class
                 "System.Collections.Generic"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;

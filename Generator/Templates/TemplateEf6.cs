@@ -8,7 +8,7 @@ namespace Efrpg.Templates
     /// <summary>
     /// {{Mustache}} template documentation available at https://github.com/jehugaleahsa/mustache-sharp
     /// </summary>
-    public class TemplateEf6 : Template
+    public class TemplateEf6: Template
     {
         public override string Usings()
         {
@@ -27,19 +27,19 @@ using {{this}};{{#newline}}
                 "System.Threading"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
-            if (data.tables.Any() || data.hasStoredProcs)
+            if(data.tables.Any() || data.hasStoredProcs)
             {
                 usings.Add("System.Data.Entity");
                 usings.Add("System.Linq");
             }
 
-            if (data.hasStoredProcs)
+            if(data.hasStoredProcs)
                 usings.Add("System.Collections.Generic");
 
-            if (!Settings.UseInheritedBaseInterfaceFunctions)
+            if(!Settings.UseInheritedBaseInterfaceFunctions)
             {
                 usings.Add("System.Data.Entity");
                 usings.Add("System.Data.Entity.Infrastructure");
@@ -96,7 +96,8 @@ using {{this}};{{#newline}}
     {{ReturnType}} {{FunctionName}}({{WriteStoredProcFunctionParamsTrue}});{{#newline}}
 {{/if}}
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
+    // SP 1{{#newline}}
+    Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}});{{#newline}}
 {{#else}}
     Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}});{{#newline}}
 {{/if}}
@@ -146,21 +147,21 @@ using {{this}};{{#newline}}
                 "System.Threading"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
-            if (data.tables.Any() || data.hasStoredProcs)
+            if(data.tables.Any() || data.hasStoredProcs)
             {
                 usings.Add("System.Data.Entity");
                 usings.Add("System.Linq");
             }
 
-            if (data.hasStoredProcs)
+            if(data.hasStoredProcs)
             {
                 usings.Add("System.Collections.Generic");
             }
 
-            if (!Settings.UseInheritedBaseInterfaceFunctions)
+            if(!Settings.UseInheritedBaseInterfaceFunctions)
             {
                 usings.Add("System.Data.Entity");
                 usings.Add("System.Data.Entity.Infrastructure");
@@ -168,7 +169,7 @@ using {{this}};{{#newline}}
                 usings.Add("System.Data.Entity.Validation");
             }
 
-            if (Settings.DatabaseType == DatabaseType.SqlCe)
+            if(Settings.DatabaseType == DatabaseType.SqlCe)
             {
                 usings.Add("System.Data.SqlClient");
                 //usings.Add("System.DBNull");
@@ -401,43 +402,80 @@ using {{this}};{{#newline}}
 {{/if}}
 {{#newline}}
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
-{{#newline}}
-{{#else}}
+    // SP 2{{#newline}}
     public async Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
     {{{#newline}}
-{{WriteStoredProcFunctionDeclareSqlParameterFalse}}
-{{WriteStoredProcFunctionSetSqlParametersFalse}}
-{{#if SingleReturnModel}}
+    {{WriteStoredProcFunctionDeclareSqlParameterFalse}}
+    {{WriteStoredProcFunctionSetSqlParametersFalse}}
+    {{#if SingleReturnModel}}
         var procResultData = await Database.SqlQuery<{{WriteStoredProcReturnModelName}}>(""{{AsyncExec}}""{{WriteStoredProcFunctionSqlParameterAnonymousArrayFalse}}).ToListAsync();{{#newline}}
-{{#else}}
+    {{#else}}
         var procResultData = new {{WriteStoredProcReturnModelName}}();{{#newline}}
         var cmd = Database.Connection.CreateCommand();{{#newline}}
         cmd.CommandType = CommandType.StoredProcedure;{{#newline}}
         cmd.CommandText = ""{{Exec}}"";{{#newline}}
-{{#each Parameters}}
+    {{#each Parameters}}
         cmd.Parameters.Add({{this}});{{#newline}}
-{{/each}}
-{{#newline}}
+    {{/each}}
+    {{#newline}}
         try{{#newline}}
         {{{#newline}}
             await DbInterception.Dispatch.Connection.OpenAsync(Database.Connection, new DbInterceptionContext(), new CancellationToken()).ConfigureAwait(false);{{#newline}}
             var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);{{#newline}}
             var objectContext = ((IObjectContextAdapter) this).ObjectContext;{{#newline}}
-{{#each ReturnModelResultSetReaderCommand}}
-{{#newline}}
+    {{#each ReturnModelResultSetReaderCommand}}
+        {{#newline}}
             procResultData.ResultSet{{Index}} = objectContext.Translate<{{WriteStoredProcReturnModelName}}.ResultSetModel{{Index}}>(reader).ToList();{{#newline}}
-{{#if NotLastRecord}}
+        {{#if NotLastRecord}}
             await reader.NextResultAsync().ConfigureAwait(false);{{#newline}}
-{{/if}}
-{{/each}}
+        {{/if}}
+    {{/each}}
         }{{#newline}}
         finally{{#newline}}
         {{{#newline}}
             DbInterception.Dispatch.Connection.Close(Database.Connection, new DbInterceptionContext());{{#newline}}
         }{{#newline}}
 
-{{/if}}
+    {{/if}}
+        return procResultData;{{#newline}}
+    }{{#newline}}
+{{#newline}}
+{{#newline}}
+{{#else}}
+    public async Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
+    {{{#newline}}
+    {{WriteStoredProcFunctionDeclareSqlParameterFalse}}
+    {{WriteStoredProcFunctionSetSqlParametersFalse}}
+    {{#if SingleReturnModel}}
+        var procResultData = await Database.SqlQuery<{{WriteStoredProcReturnModelName}}>(""{{AsyncExec}}""{{WriteStoredProcFunctionSqlParameterAnonymousArrayFalse}}).ToListAsync();{{#newline}}
+    {{#else}}
+        var procResultData = new {{WriteStoredProcReturnModelName}}();{{#newline}}
+        var cmd = Database.Connection.CreateCommand();{{#newline}}
+        cmd.CommandType = CommandType.StoredProcedure;{{#newline}}
+        cmd.CommandText = ""{{Exec}}"";{{#newline}}
+    {{#each Parameters}}
+        cmd.Parameters.Add({{this}});{{#newline}}
+    {{/each}}
+    {{#newline}}
+        try{{#newline}}
+        {{{#newline}}
+            await DbInterception.Dispatch.Connection.OpenAsync(Database.Connection, new DbInterceptionContext(), new CancellationToken()).ConfigureAwait(false);{{#newline}}
+            var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);{{#newline}}
+            var objectContext = ((IObjectContextAdapter) this).ObjectContext;{{#newline}}
+    {{#each ReturnModelResultSetReaderCommand}}
+        {{#newline}}
+            procResultData.ResultSet{{Index}} = objectContext.Translate<{{WriteStoredProcReturnModelName}}.ResultSetModel{{Index}}>(reader).ToList();{{#newline}}
+        {{#if NotLastRecord}}
+            await reader.NextResultAsync().ConfigureAwait(false);{{#newline}}
+        {{/if}}
+    {{/each}}
+        }{{#newline}}
+        finally{{#newline}}
+        {{{#newline}}
+            DbInterception.Dispatch.Connection.Close(Database.Connection, new DbInterceptionContext());{{#newline}}
+        }{{#newline}}
+
+    {{/if}}
         return procResultData;{{#newline}}
     }{{#newline}}
 {{#newline}}
@@ -483,7 +521,7 @@ using {{this}};{{#newline}}
                 "System",
                 "System.Data.Entity.Infrastructure"
             };
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
             return usings;
         }
@@ -519,19 +557,19 @@ using {{this}};{{#newline}}
                 "System.Threading"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
-            if (data.tables.Any() || data.hasStoredProcs)
+            if(data.tables.Any() || data.hasStoredProcs)
             {
                 usings.Add("System.Data.Entity");
                 usings.Add("System.Linq");
             }
 
-            if (data.hasStoredProcs)
+            if(data.hasStoredProcs)
                 usings.Add("System.Collections.Generic");
 
-            if (!Settings.UseInheritedBaseInterfaceFunctions)
+            if(!Settings.UseInheritedBaseInterfaceFunctions)
             {
                 usings.Add("System.Data.Entity");
                 usings.Add("System.Data.Entity.Infrastructure");
@@ -539,7 +577,7 @@ using {{this}};{{#newline}}
                 usings.Add("System.Data.Entity.Validation");
             }
 
-            if (Settings.DatabaseType == DatabaseType.SqlCe)
+            if(Settings.DatabaseType == DatabaseType.SqlCe)
             {
                 usings.Add("System.Data.SqlClient");
                 //usings.Add("System.DBNull");
@@ -682,7 +720,12 @@ using {{this}};{{#newline}}
 
 {{#newline}}
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
+    // SP 3{{#newline}}
+    public Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
+    {{{#newline}}
+        int procResult;{{#newline}}
+        return Task.FromResult({{FunctionName}}({{WriteStoredProcFunctionOverloadCall}}));{{#newline}}
+    }{{#newline}}
 {{#newline}}
 {{#else}}
     public Task<{{ReturnType}}> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
@@ -701,7 +744,12 @@ using {{this}};{{#newline}}
     }{{#newline}}
 {{#newline}}
 {{#if AsyncFunctionCannotBeCreated}}
-    // {{FunctionName}}Async() cannot be created due to having out parameters, or is relying on the procedure result ({{ReturnType}}){{#newline}}
+    // SP 4{{#newline}}
+    public Task<int> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
+    {{{#newline}}
+{{WriteStoredProcFunctionSetSqlParametersTrue}}
+        return Task.FromResult(0);{{#newline}}
+    }{{#newline}}
 {{#else}}
     public Task<int> {{FunctionName}}Async({{WriteStoredProcFunctionParamsFalse}}){{#newline}}
     {{{#newline}}
@@ -760,7 +808,7 @@ using {{this}};{{#newline}}
                 "System.Threading.Tasks"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;
@@ -1054,7 +1102,7 @@ using {{this}};{{#newline}}
                 "System.Threading.Tasks",
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;
@@ -1178,7 +1226,7 @@ using {{this}};{{#newline}}
                 "System.ComponentModel.DataAnnotations.Schema"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;
@@ -1244,7 +1292,7 @@ using {{this}};{{#newline}}
                 "System.Collections.Generic"
             };
 
-            if (Settings.IncludeCodeGeneratedAttribute)
+            if(Settings.IncludeCodeGeneratedAttribute)
                 usings.Add("System.CodeDom.Compiler");
 
             return usings;

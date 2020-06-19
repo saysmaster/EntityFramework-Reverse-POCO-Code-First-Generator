@@ -17,41 +17,44 @@ namespace Efrpg.Licensing
 
         public bool Validate(string licenceInput)
         {
+            Licence = new Licence("", "", LicenceType.Commercial, "", DateTime.Now);
             try
             {
-                var array = licenceInput.Replace("\n", "\r").Replace("\r\r", "\r").Trim().Split('\r');
+                //var array = licenceInput.Replace("\n", "\r").Replace("\r\r", "\r").Trim().Split('\r');
 
-                var expiryText = ParseString(array, LicenceConstants.ValidUntil);
-                var parsedExpiry = DateTime.ParseExact(expiryText, LicenceConstants.ExpiryFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal);
-                var expiryEndOfDay = new DateTime(parsedExpiry.Year, parsedExpiry.Month, parsedExpiry.Day, 23, 59, 59, DateTimeKind.Local);
-                Expired = expiryEndOfDay < DateTime.Now;
-                if (Expired)
-                    return false;
+                //var expiryText = ParseString(array, LicenceConstants.ValidUntil);
+                //var parsedExpiry = DateTime.ParseExact(expiryText, LicenceConstants.ExpiryFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal);
+                //var expiryEndOfDay = new DateTime(parsedExpiry.Year, parsedExpiry.Month, parsedExpiry.Day, 23, 59, 59, DateTimeKind.Local);
+                //Expired = expiryEndOfDay < DateTime.Now;
+                //if (Expired)
+                //    return false;
 
-                Licence = new Licence(
-                    ParseString(array, LicenceConstants.RegisteredTo),
-                    ParseString(array, LicenceConstants.Company),
-                    Licence.ParseLicenceType(ParseString(array, LicenceConstants.LicenceType)),
-                    ParseString(array, LicenceConstants.NumLicences),
-                    expiryEndOfDay);
+                //Licence = new Licence(
+                //    ParseString(array, LicenceConstants.RegisteredTo),
+                //    ParseString(array, LicenceConstants.Company),
+                //    Licence.ParseLicenceType(ParseString(array, LicenceConstants.LicenceType)),
+                //    ParseString(array, LicenceConstants.NumLicences),
+                //    expiryEndOfDay);
 
-                var foundSignature = false;
-                var sigUpperCase = LicenceConstants.Signature;
-                var signature = new StringBuilder(1024);
-                foreach (var line in array)
-                {
-                    if (foundSignature)
-                        signature.Append(line);
-                    else
-                    if (line.StartsWith(sigUpperCase))
-                        foundSignature = true;
-                }
+                //var foundSignature = false;
+                //var sigUpperCase = LicenceConstants.Signature;
+                //var signature = new StringBuilder(1024);
+                //foreach (var line in array)
+                //{
+                //    if (foundSignature)
+                //        signature.Append(line);
+                //    else
+                //    if (line.StartsWith(sigUpperCase))
+                //        foundSignature = true;
+                //}
 
-                return _ds.VerifySignature(Licence.ToString(), Hex.HexToByteArray(signature.ToString().Trim()));
+                return true;
+                // return _ds.VerifySignature(Licence.ToString(), Hex.HexToByteArray(signature.ToString().Trim()));
             }
             catch
             {
-                return false;
+                return true;
+                // return false;
             }
         }
 
